@@ -211,7 +211,14 @@ Open **http://localhost:3000** in your browser 🚀
 
 ## 📸 Screenshots
 
-> Coming Soon
+### 🏠 Home Page
+![Home](public/screenshots/home.png)
+ 
+### 📺 Where to Watch
+![Movie Card](public/screenshots/movie-card.png)
+
+### 🔐 Login Page
+![Login](public/screenshots/login.png)
 
 ---
 
