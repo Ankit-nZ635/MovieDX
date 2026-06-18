@@ -84,7 +84,7 @@ const streamingLinks = {
 };
 
 const movieTitles = [
-  "Baahubali: The Beginning","The Dark Knight", "Inception", "The Matrix", "Gladiator",
+  "Baahubali: The Beginning","The Dark Knight", "Inception", "The Matrix", "Gladiator","Housefull 5",
   "Avengers Endgame", "John Wick", "Mad Max Fury Road", "Die Hard",
   "Mission Impossible", "Top Gun Maverick", "Batman Begins", "Iron Man",
   "The Shawshank Redemption", "The Godfather", "Forrest Gump",
@@ -133,6 +133,7 @@ function fetchTrailer(title) {
 }
 
 const trailerLinks = {
+  
   "Baahubali: The Beginning": "https://www.youtube.com/watch?v=3NQRhE772b0",
   "The Dark Knight":          "https://www.youtube.com/watch?v=EXeTwQWrcwY",
   "Inception":                "https://www.youtube.com/watch?v=YoHD9XEInc0",

@@ -39,6 +39,7 @@ function Navbar(props) {
           <Link onClick={toggleNav} to="/movies">
             Home
           </Link>
+          {props.loggedIn && ( <Link onClick={toggleNav} to="/watchlist"> Watchlist </Link> )}
           {!props.loggedIn ? (
             <>
               <Link onClick={toggleNav} to="/login">

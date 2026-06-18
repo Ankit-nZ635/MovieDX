@@ -6,6 +6,8 @@ import {
   BrowserRouter as Router,
 } from "react-router-dom";
 
+ 
+import Watchlist from "./pages/Watchlist";
 import Movies from "./pages/Movies";
 import AddMovieForm from "./pages/AddMovie";
 import AddGenre from "./pages/AddGenre";
@@ -33,9 +35,15 @@ class App extends Component {
               <Route exact path="/login" component={Login} />
               <Route path="/register" component={Register} />
               <Route path="/movies" exact component={Movies} />
+                <Route
+                  path="/watchlist"
+                  exact
+                  component={Watchlist}
+                />
 
               <Redirect exact from="/" to="/movies" />
             </Switch>
+            
             <Footer />
           </div>
         </Router>
@@ -45,3 +53,4 @@ class App extends Component {
 }
 
 export default App;
+ 

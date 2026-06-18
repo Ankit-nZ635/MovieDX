@@ -1,3 +1,4 @@
+import Movie from "../models/movie.js";
 import User from "../models/user.js";
 import express from "express";
 const router = express.Router();
@@ -37,5 +38,85 @@ router.delete("/:userId", async (req, res) => {
     res.status(500).json({ err: `Something went wrong: ${err}` });
   }
 });
+
+
+router.post("/:userId/watchlist/:movieId", async (req, res) => {
+  try {
+    const user = await User.findById(req.params.userId);
+
+    if (!user) {
+      return res.status(404).json({
+        msg: "User not found",
+      });
+    }
+
+    const exists = user.watchlist.find(
+      (item) =>
+        item.movieId.toString() === req.params.movieId
+    );
+
+    if (exists) {
+      return res.status(400).json({
+        msg: "Movie already in watchlist",
+      });
+    }
+
+    user.watchlist.push({
+      movieId: req.params.movieId,
+    });
+
+    await user.save();
+
+    res.status(200).json({
+      msg: "Added to watchlist",
+    });
+  } catch (err) {
+    res.status(500).json({
+      err: err.message,
+    });
+  }
+});
+
+router.get("/:userId/watchlist", async (req, res) => {
+  try {
+    const user = await User.findById(req.params.userId)
+      .populate("watchlist.movieId");
+
+    res.status(200).json({
+      watchlist: user.watchlist,
+    });
+  } catch (err) {
+    res.status(500).json({
+      err: err.message,
+    });
+  }
+});
+
+router.delete(
+  "/:userId/watchlist/:movieId",
+  async (req, res) => {
+    try {
+      const user = await User.findById(
+        req.params.userId
+      );
+
+      user.watchlist = user.watchlist.filter(
+        (item) =>
+          item.movieId.toString() !==
+          req.params.movieId
+      );
+
+      await user.save();
+
+      res.status(200).json({
+        msg: "Removed from watchlist",
+      });
+    } catch (err) {
+      res.status(500).json({
+        err: err.message,
+      });
+    }
+  }
+);
 
 export default router;

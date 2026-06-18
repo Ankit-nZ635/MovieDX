@@ -36,7 +36,11 @@ export default function ({ movie }) {
           title={title}
         />
 
-        <FlippingCardBack description={description} whereToWatch={whereToWatch}/>
+        <FlippingCardBack
+  id={_id}
+  description={description}
+  whereToWatch={whereToWatch}
+/>
       </div>
     </div>
   );
