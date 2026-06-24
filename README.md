@@ -69,7 +69,7 @@
 
 ## 📁 Project Structure
 
-iCinema/
+MvieDX/
 
 ├── controller/          # API route handlers
 
