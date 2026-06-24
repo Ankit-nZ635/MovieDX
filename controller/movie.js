@@ -132,4 +132,24 @@ router.patch("/:movieId", checkAuth, checkAdmin, async (req, res) => {
   }
 });
 
+router.delete("/:movieId", checkAuth, checkAdmin, async (req, res) => {
+  try {
+    const movie = await Movie.findByIdAndDelete(req.params.movieId);
+
+    if (!movie) {
+      return res.status(404).json({
+        message: "Movie not found",
+      });
+    }
+
+    res.status(200).json({
+      message: "Movie deleted successfully",
+    });
+  } catch (error) {
+    res.status(500).json({
+      error: error.message,
+    });
+  }
+});
+
 export default router;

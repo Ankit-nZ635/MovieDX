@@ -53,3 +53,22 @@ export const addMovie = (movie, history) => {
     }
   };
 };
+
+export const deleteMovie = (movieId) => {
+  return async (dispatch) => {
+    const user = JSON.parse(localStorage.getItem("user"));
+
+    await Axios.delete(`/api/movies/${movieId}`, {
+      headers: {
+        Authorization: `Bearer ${user.accessToken}`,
+      },
+    });
+
+    const result = await Axios.get("/api/movies");
+
+    dispatch({
+      type: GET_MOVIES_SUCCESS,
+      payload: result.data.movies,
+    });
+  };
+};
