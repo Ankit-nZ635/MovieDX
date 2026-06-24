@@ -1,0 +1,93 @@
+.footer {
+  background: #0f1115;
+  color: #ccc;
+  padding: 50px 20px 20px;
+  margin-top: 0;
+  border-top: 1px solid #222;
+}
+
+.footer-container {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 30px;
+  max-width: 1200px;
+  margin: auto;
+}
+
+/* Left */
+.footer-left {
+  flex: 1;
+  min-width: 250px;
+}
+
+.logo {
+  color: #ff3d49;
+  margin-bottom: 10px;
+}
+
+.footer-left p {
+  line-height: 1.6;
+  font-size: 14px;
+}
+.socials {
+  display: flex;
+  gap: 15px;
+  margin-top: 10px;
+}
+
+.socials a {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #1f1f1f;
+  color: white;
+  font-size: 18px;
+  transition: 0.3s;
+  text-decoration: none;
+}
+
+.socials a:hover {
+  background: #e50914; /* Netflix red style */
+  transform: scale(1.1);
+}
+
+/* Columns */
+.footer-column {
+  min-width: 180px;
+}
+
+.footer-column h3 {
+  color: white;
+  margin-bottom: 10px;
+  border-left: 3px solid #ff3d49;
+  padding-left: 8px;
+}
+
+.footer-column a {
+  display: block;
+  color: #aaa;
+  text-decoration: none;
+  margin: 6px 0;
+  transition: 0.3s;
+}
+
+.footer-column a:hover {
+  color: #ff3d49;
+  transform: translateX(5px);
+}
+
+/* Bottom */
+.footer-bottom {
+  margin-top: 40px;
+  padding-top: 15px;
+  border-top: 1px solid #222;
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  font-size: 13px;
+  color: #888;
+}
