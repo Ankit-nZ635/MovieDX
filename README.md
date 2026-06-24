@@ -69,7 +69,7 @@
 
 ## 📁 Project Structure
 
-MvieDX/
+MovieDX/
 
 ├── controller/          # API route handlers
 
