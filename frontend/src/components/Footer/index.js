@@ -57,7 +57,7 @@ export default function Footer() {
 
       {/* Bottom Bar */}
       <div className="footer-bottom">
-        <p>© 2025 MovieDX. All rights reserved.</p>
+        <p>© 2026 MovieDX. All rights reserved.</p>
         <p>Privacy Policy | Terms | Disclaimer</p>
         <p>Made with ❤️ by Ankit IIITA</p>
       </div>
