@@ -31,7 +31,7 @@ export default function Footer() {
           <h3>Quick Links</h3>
           <a href="/">Home</a>
           <a href="/movies">Movies</a>
-          <a href="/tv">TV Shows</a>
+          <a href="/">TV Shows</a>
           <a href="/watchlist">Watchlist</a>
         </div>
 
@@ -48,8 +48,8 @@ export default function Footer() {
         <div className="footer-column">
           <h3>Contact Us</h3>
           <p>📧 support@movedx.com</p>
-          <p>📞 +91 98765 43210</p>
-          <p>📍 New Delhi, India</p>
+          <p>📞 +91 xxxxxxxxxx</p>
+          <p>📍 prayagraj, India</p>
           <p>⏰ Mon - Sat: 10AM - 7PM</p>
         </div>
 
