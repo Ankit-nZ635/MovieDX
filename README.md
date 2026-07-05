@@ -133,7 +133,7 @@ MovieDX/
 ### 1️⃣ Clone the repository
 ```bash
 git clone https://github.com/Ankit-nZ635/MovieDX.git
-cd MovieDX/iCinema
+cd MovieDX/MovieDX
 ```
 
 ### 2️⃣ Install dependencies
@@ -216,9 +216,13 @@ Open **http://localhost:3000** in your browser 🚀
  
 ### 📺 Where to Watch
 ![Movie Card](public/screenshots/movie-card.png)
+ 
+### 📝 Watchlist Page
+![Watchlist](public/screenshots/watchlist.png)
 
 ### 🔐 Login Page
 ![Login](public/screenshots/login.png)
+
 
 ---
 
