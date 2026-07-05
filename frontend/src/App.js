@@ -7,7 +7,7 @@ import {
 } from "react-router-dom";
 
  
-import Watchlist from "./pages/Watchlist";
+import Watchlist from "./pages/Watchlist";  // ← CORRECT
 import Movies from "./pages/Movies";
 import AddMovieForm from "./pages/AddMovie";
 import AddGenre from "./pages/AddGenre";

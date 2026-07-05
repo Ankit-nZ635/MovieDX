@@ -1,491 +1,336 @@
 import mongoose from "mongoose";
-import dotenv from "dotenv";
-import Movie from "../models/movie.js";
-import Genre from "../models/genre.js";
-import User from "../models/user.js";
+import https from "https";
 
-dotenv.config();
+const MONGO_URL = "mongodb+srv://ankit_ekka_db:dbAnkitekka@icine.36picpj.mongodb.net/iCinema?appName=iCine";
+const OMDB_API_KEY = "4aebbc48";
+const YOUTUBE_API_KEY = "AIzaSyDyM7Zh9m-lZU4_4HTx70upO2IRfBLPGk0"; 
 
-const genres = [
-  { name: "Drama" },
-  { name: "Crime" },
-  { name: "Action" },
-  { name: "Comedy" },
-  { name: "Horror" },
-  { name: "Romance" },
-  { name: "Sci-Fi" },
-  { name: "Fantasy" },
-  { name: "Thriller" },
-  { name: "Mystery" },
-];
+const genreSchema = mongoose.Schema({ name: String });
+const Genre = mongoose.model("Genre", genreSchema);
 
-const movies = [
-  {
-    title: "The Shawshank Redemption",
-    genre: ["Drama"],
-    image: "https://m.media-amazon.com/images/I/81dLj5FeX7L._SY445_.jpg",
-    rate: 9.3,
-    description: "Two imprisoned men bond over a number of years, finding solace and eventual redemption through acts of common decency.",
-    trailerLink: "https://www.youtube.com/watch?v=6hB3S9bIaco",
-    movieLength: "142 min",
+const movieSchema = mongoose.Schema({
+  title: String,
+  genre: [{ type: mongoose.Schema.Types.ObjectId, ref: "Genre" }],
+  rate: Number,
+  description: String,
+  image: String,
+  trailerLink: String,
+  movieLength: Number,
+  whereToWatch: {
+    netflix: String,
+    prime: String,
+    hotstar: String,
+    youtube: String,
   },
-  {
-    title: "The Godfather",
-    genre: ["Crime", "Drama"],
-    image: "https://m.media-amazon.com/images/M/MV5BM2MyNjYxNmUtYTAwNi00MTYxLWJmNWYtYzZlODY3ZTk3OTFlXkEyXkFqcGdeQXVyNzkwMjQ5NzM@._V1_FMjpg_UX1000_.jpg",
-    rate: 9.2,
-    description: "The aging patriarch of an organized crime dynasty transfers control of his clandestine empire to his reluctant son.",
-    trailerLink: "https://www.youtube.com/watch?v=sY1S34973zA",
-    movieLength: "175 min",
-  },
-  {
-    title: "The Dark Knight",
-    genre: ["Action", "Crime", "Drama"],
-    image: "https://m.media-amazon.com/images/M/MV5BMTMxNTMwODM0NF5BMl5BanBnXkFtZTcwODAyMTk2Mw@@._V1_FMjpg_UX1000_.jpg",
-    rate: 9.0,
-    description: "When the menace known as the Joker wreaks havoc and chaos on the people of Gotham, Batman must accept one of the greatest psychological and physical tests of his ability to fight injustice.",
-    trailerLink: "https://www.youtube.com/watch?v=EXeTwQWrcwY",
-    movieLength: "152 min",
-  },
-  {
-    title: "Pulp Fiction",
-    genre: ["Crime", "Drama"],
-    image: "https://m.media-amazon.com/images/M/MV5BNGNhMDIzZTUtNTBlZi00MTRlLWFjM2ItYzViMjE3YzI5MjljXkEyXkFqcGdeQXVyNzkwMjQ5NzM@._V1_FMjpg_UX1000_.jpg",
-    rate: 8.9,
-    description: "The lives of two mob hitmen, a boxer, a gangster and his wife, and a pair of diner bandits intertwine in four tales of violence and redemption.",
-    trailerLink: "https://www.youtube.com/watch?v=s7EdQ4FqbhY",
-    movieLength: "154 min",
-  },
-  {
-    title: "Forrest Gump",
-    genre: ["Drama", "Romance"],
-    image: "https://m.media-amazon.com/images/M/MV5BNWIwODRlZTUtY2U3ZS00Yzg1LWJhNzYtMmZiYmEyNmU1NjMzXkEyXkFqcGdeQXVyMTQxNzMzNDI@._V1_FMjpg_UX1000_.jpg",
-    rate: 8.8,
-    description: "The presidencies of Kennedy and Johnson, the Vietnam War, the Watergate scandal and other historical events unfold from the perspective of an Alabama man with an IQ of 75, whose only desire is to be reunited with his childhood sweetheart.",
-    trailerLink: "https://www.youtube.com/watch?v=bLvqoHBptjg",
-    movieLength: "142 min",
-  },
-  {
-    title: "Inception",
-    genre: ["Action", "Sci-Fi", "Thriller"],
-    image: "https://m.media-amazon.com/images/M/MV5BMjAxMzY3NjcxNF5BMl5BanBnXkFtZTcwNTI5OTM0Mw@@._V1_FMjpg_UX1000_.jpg",
-    rate: 8.8,
-    description: "A thief who steals corporate secrets through the use of dream-sharing technology is given the inverse task of planting an idea into the mind of a C.E.O.",
-    trailerLink: "https://www.youtube.com/watch?v=YoHD9XEInc0",
-    movieLength: "148 min",
-  },
-  {
-    title: "The Matrix",
-    genre: ["Action", "Sci-Fi"],
-    image: "https://m.media-amazon.com/images/M/MV5BNzQzOTk3OTAtNDQ0Zi00ZTVkLWI0MTEtMDllZjNkYzNjNTc4L2ltYWdlXkEyXkFqcGdeQXVyNjU0OTQ0OTY@._V1_FMjpg_UX1000_.jpg",
-    rate: 8.7,
-    description: "A computer hacker learns from mysterious rebels about the true nature of his reality and his role in the war against its controllers.",
-    trailerLink: "https://www.youtube.com/watch?v=vKQi3bBA1y8",
-    movieLength: "136 min",
-  },
-  {
-    title: "The Silence of the Lambs",
-    genre: ["Crime", "Drama", "Thriller"],
-    image: "https://m.media-amazon.com/images/M/MV5BNjNhZTk0ZmEtNjJhMi00YzFlLWE1MmEtYzM1M2ZmMGMwMTU4XkEyXkFqcGdeQXVyNjU0OTQ0OTY@._V1_FMjpg_UX1000_.jpg",
-    rate: 8.6,
-    description: "A young F.B.I. cadet must receive the help of an incarcerated and manipulative cannibal killer to help catch another serial killer, a madman who skins his victims.",
-    trailerLink: "https://www.youtube.com/watch?v=W6Mm8Sbe__o",
-    movieLength: "118 min",
-  },
-  {
-    title: "It's a Wonderful Life",
-    genre: ["Drama", "Fantasy", "Romance"],
-    image: "https://m.media-amazon.com/images/M/MV5BZjc4NDZhZWMtNGEzYS00ZWU2LThlM2ItNTA0YzQ0OTExMTE2XkEyXkFqcGdeQXVyNjUwMzI2NzU@._V1_FMjpg_UX1000_.jpg",
-    rate: 8.6,
-    description: "An angel is sent from Heaven to help a desperately frustrated businessman by showing him what life would have been like if he had never existed.",
-    trailerLink: "https://www.youtube.com/watch?v=i_w-bY9v_5I",
-    movieLength: "130 min",
-  },
-  {
-    title: "The Green Mile",
-    genre: ["Crime", "Drama", "Fantasy"],
-    image: "https://m.media-amazon.com/images/M/MV5BMTUxMzQyNjA5MF5BMl5BanBnXkFtZTYwOTU2NTY3._V1_FMjpg_UX1000_.jpg",
-    rate: 8.6,
-    description: "The lives of guards on Death Row are affected by one of their charges: a black man accused of child murder and rape, yet who has a mysterious gift.",
-    trailerLink: "https://www.youtube.com/watch?v=Ki4haFrqSrw",
-    movieLength: "189 min",
-  },
-  {
-    title: "Parasite",
-    genre: ["Comedy", "Drama", "Thriller"],
-    image: "https://m.media-amazon.com/images/M/MV5BYWZjMjk3ZTItODQ2ZC00NTY5LWE0ZDYtZTI3MjcwN2Q5NTVkXkEyXkFqcGdeQXVyODk4OTc3MTY@._V1_FMjpg_UX1000_.jpg",
-    rate: 8.6,
-    description: "Greed and class discrimination threaten the newly formed symbiotic relationship between the wealthy Park family and the destitute Kim clan.",
-    trailerLink: "https://www.youtube.com/watch?v=5xH0HfJHM7c",
-    movieLength: "132 min",
-  },
-  {
-    title: "Gladiator",
-    genre: ["Action", "Drama"],
-    image: "https://m.media-amazon.com/images/M/MV5BMDliMmNhNDEtODUyOS00MjNlLTgxODEtN2U3NzIxMGVkZTA1L2ltYWdlXkEyXkFqcGdeQXVyNjU0OTQ0OTY@._V1_FMjpg_UX1000_.jpg",
-    rate: 8.5,
-    description: "A former Roman General sets out to exact vengeance against the corrupt emperor who murdered his family and sent him into slavery.",
-    trailerLink: "https://www.youtube.com/watch?v=owK1qxDselE",
-    movieLength: "155 min",
-  },
-  {
-    title: "The Departed",
-    genre: ["Crime", "Drama", "Thriller"],
-    image: "https://m.media-amazon.com/images/M/MV5BMTI1MTY2OTIxNV5BMl5BanBnXkFtZTYwNjQ4NjY3._V1_FMjpg_UX1000_.jpg",
-    rate: 8.5,
-    description: "An undercover cop and a mole in the police attempt to identify each other while infiltrating an Irish gang in South Boston.",
-    trailerLink: "https://www.youtube.com/watch?v=iojh_h_i4tI",
-    movieLength: "151 min",
-  },
-  {
-    title: "The Prestige",
-    genre: ["Drama", "Mystery", "Sci-Fi"],
-    image: "https://m.media-amazon.com/images/M/MV5BMjA4NDI0MTIxNl5BMl5BanBnXkFtZTYwNTM0MzY2._V1_FMjpg_UX1000_.jpg",
-    rate: 8.5,
-    description: "After a tragic accident, two stage magicians engage in a battle to create the ultimate illusion while sacrificing everything they have to outwit each other.",
-    trailerLink: "https://www.youtube.com/watch?v=o4gHCmTQDgI",
-    movieLength: "130 min",
-  },
-  {
-    title: "Whiplash",
-    genre: ["Drama"],
-    image: "https://m.media-amazon.com/images/M/MV5BOTA5NDZlZGUtMjAxOS00YTRkLTkwYmMtYWQ0NWEwZDZiNjEzXkEyXkFqcGdeQXVyMTMxODk2OTU@._V1_FMjpg_UX1000_.jpg",
-    rate: 8.5,
-    description: "A promising young drummer enrolls at a cut-throat music conservatory where his dreams of greatness are mentored by an instructor who will stop at nothing to realize a student's potential.",
-    trailerLink: "https://www.youtube.com/watch?v=7d_jQycdQGo",
-    movieLength: "106 min",
-  },
-  {
-    title: "The Intouchables",
-    genre: ["Comedy", "Drama"],
-    image: "https://m.media-amazon.com/images/M/MV5BMTYxNDA3MDQwNl5BMl5BanBnXkFtZTcwNTU4Mzc1Nw@@._V1_FMjpg_UX1000_.jpg",
-    rate: 8.5,
-    description: "After he becomes a quadriplegic from a paragliding accident, an aristocrat hires a young man from the projects to be his caregiver.",
-    trailerLink: "https://www.youtube.com/watch?v=34WIbmXkewU",
-    movieLength: "112 min",
-  },
-  {
-    title: "Grave of the Fireflies",
-    genre: ["Drama"],
-    image: "https://m.media-amazon.com/images/M/MV5BZmY2NjUzNDQtNTgxMi00M2Q4LWFEZNWEtZmRhNzAxMjFleDI5XkEyXkFqcGdeQXVyMTMxODk2OTU@._V1_FMjpg_UX1000_.jpg",
-    rate: 8.5,
-    description: "A young boy and his little sister struggle to survive in Japan during World War II.",
-    trailerLink: "https://www.youtube.com/watch?v=4vPeTSRd580",
-    movieLength: "89 min",
-  },
-  {
-    title: "Coco",
-    genre: ["Comedy", "Fantasy"],
-    image: "https://m.media-amazon.com/images/M/MV5BYjQ5NjM0Y2YtNjZkNC00ZDhkLWI1YzgtYzAwMjYxNzQxMjM0XkEyXkFqcGdeQXVyODk4OTc3MTY@._V1_FMjpg_UX1000_.jpg",
-    rate: 8.4,
-    description: "Aspiring musician Miguel, confronted with his family's ancestral ban on music, enters the Land of the Dead to find his great-great-grandfather, a legendary singer.",
-    trailerLink: "https://www.youtube.com/watch?v=xlnm3jcEa4A",
-    movieLength: "105 min",
-  },
-  {
-    title: "Joker",
-    genre: ["Crime", "Drama", "Thriller"],
-    image: "https://m.media-amazon.com/images/M/MV5BNGVjNWI4ZGUtNzE0MS00YTJmLWE0ZDctN2ZiYTk2YmI3NTYyXkEyXkFqcGdeQXVyMTkxNjUyNQ@@._V1_FMjpg_UX1000_.jpg",
-    rate: 8.4,
-    description: "In Gotham City, mentally troubled comedian Arthur Fleck is disregarded and mistreated by society. He then embarks on a downward spiral of revolution and bloody crime. This path brings him face-to-face with his alter-ego: the Joker.",
-    trailerLink: "https://www.youtube.com/watch?v=zAGVQLHvwOY",
-    movieLength: "122 min",
-  },
-  {
-    title: "Your Name.",
-    genre: ["Drama", "Fantasy", "Romance"],
-    image: "https://m.media-amazon.com/images/M/MV5BODRmZDVmNzUtZDA4ZC00NjhkLWI2M2UtN2M0ZDIzNDcxYThjXkEyXkFqcGdeQXVyNTk0NTMzNjY@._V1_FMjpg_UX1000_.jpg",
-    rate: 8.4,
-    description: "Two strangers find themselves linked in a bizarre way. When a connection forms, will distance be the only thing to keep them apart?",
-    trailerLink: "https://www.youtube.com/watch?v=xU47dYJAtFg",
-    movieLength: "106 min",
-  },
-  {
-    title: "3 Idiots",
-    genre: ["Comedy", "Drama"],
-    image: "https://m.media-amazon.com/images/M/MV5BNTkyOGVjMGEtNmQzZi00NzFlLTlhOWQtODY3MmMvNTMwODU2XkEyXkFqcGdeQXVyNjY1MTg4Mzc@._V1_FMjpg_UX1000_.jpg",
-    rate: 8.4,
-    description: "Two friends are searching for their long lost companion. They revisit their college days and recall the memories of their friend who inspired them to think differently, even as the rest of the world called them \"idiots\".",
-    trailerLink: "https://www.youtube.com/watch?v=K0e-w_y-I-A",
-    movieLength: "170 min",
-  },
-  {
-    title: "Toy Story",
-    genre: ["Comedy", "Fantasy"],
-    image: "https://m.media-amazon.com/images/M/MV5BMDU2ZWJlMjktMTRhMy00ZTA5LWEzNDgtYmNmZTEwZTViZWJkXkEyXkFqcGdeQXVyNDQ2OTk4MzI@._V1_FMjpg_UX1000_.jpg",
-    rate: 8.3,
-    description: "A cowboy doll is profoundly threatened and jealous when a new spaceman figure supplants him as top toy in a boy's room.",
-    trailerLink: "https://www.youtube.com/watch?v=KYz2wyBy3kc",
-    movieLength: "81 min",
-  },
-  {
-    title: "Braveheart",
-    genre: ["Action", "Drama"],
-    image: "https://m.media-amazon.com/images/M/MV5BMzkzMmU0YTYtOWM3My00YzBmLWI0YzctOGYyNTkwMWE5MTJkXkEyXkFqcGdeQXVyNzkwMjQ5NzM@._V1_FMjpg_UX1000_.jpg",
-    rate: 8.3,
-    description: "When his secret bride is executed for assaulting an English soldier who tried to rape her, William Wallace begins a revolt against King Edward I of England.",
-    trailerLink: "https://www.youtube.com/watch?v=1Nde-_D3I0A",
-    movieLength: "178 min",
-  },
-  {
-    title: "Good Will Hunting",
-    genre: ["Drama", "Romance"],
-    image: "https://m.media-amazon.com/images/M/MV5BOTI0MzcxMTYtZDVkMy00NjY1LTgyMTYtZmUxN2M3NmQ2NWJhXkEyXkFqcGdeQXVyMTQxNzMzNDI@._V1_FMjpg_UX1000_.jpg",
-    rate: 8.3,
-    description: "Will Hunting, a janitor at M.I.T., has a gift for mathematics, but needs help from a psychologist to find direction in his life.",
-    trailerLink: "https://www.youtube.com/watch?v=PaZVjZEFkRs",
-    movieLength: "126 min",
-  },
-  {
-    title: "The Truman Show",
-    genre: ["Comedy", "Drama", "Sci-Fi"],
-    image: "https://m.media-amazon.com/images/M/MV5BMDIzODcyY2EtMmY2MC00ZWVlLTgwMzAtMjQwOWUyNmJjNTYyXkEyXkFqcGdeQXVyNDk3NzU2MTQ@._V1_FMjpg_UX1000_.jpg",
-    rate: 8.1,
-    description: "An insurance salesman discovers his whole life is actually a reality TV show.",
-    trailerLink: "https://www.youtube.com/watch?v=dlnmQbPGvSQ",
-    movieLength: "103 min",
-  },
-  {
-    title: "Shutter Island",
-    genre: ["Mystery", "Thriller"],
-    image: "https://m.media-amazon.com/images/M/MV5BYzhiNDkyNzktNTZmYS00ZTBkLTk2MDAtM2U0YjU1MzgxZjgzXkEyXkFqcGdeQXVyMTMxODk2OTU@._V1_FMjpg_UX1000_.jpg",
-    rate: 8.2,
-    description: "In 1954, a U.S. Marshal investigates the disappearance of a murderer who escaped from a hospital for the criminally insane.",
-    trailerLink: "https://www.youtube.com/watch?v=5iaYLCiq5RM",
-    movieLength: "138 min",
-  },
-  {
-    title: "A Beautiful Mind",
-    genre: ["Drama"],
-    image: "https://m.media-amazon.com/images/M/MV5BMzcwYWFkYzktZjAzNC00OGY1LWI4YTgtNzc5MzVjMDVmNjY0XkEyXkFqcGdeQXVyMTQxNzMzNDI@._V1_FMjpg_UX1000_.jpg",
-    rate: 8.2,
-    description: "After John Nash, a brilliant but asocial mathematician, accepts secret work in cryptography, his life takes a turn for the nightmarish.",
-    trailerLink: "https://www.youtube.com/watch?v=WFJgUm7iOKw",
-    movieLength: "135 min",
-  },
-  {
-    title: "The Sixth Sense",
-    genre: ["Drama", "Mystery", "Thriller"],
-    image: "https://m.media-amazon.com/images/M/MV5BMWM4NTFhYjctNzUyNi00NGMwLTk3NTYtMDIyNTZmMzRlYmQyXkEyXkFqcGdeQXVyMTAwMzUyOTc@._V1_FMjpg_UX1000_.jpg",
-    rate: 8.1,
-    description: "A boy who communicates with spirits seeks the help of a disheartened child psychologist.",
-    trailerLink: "https://www.youtube.com/watch?v=3y42-rIzzgU",
-    movieLength: "107 min",
-  },
-  {
-    title: "Finding Nemo",
-    genre: ["Comedy", "Fantasy"],
-    image: "https://m.media-amazon.com/images/M/MV5BZjMxYzBiZTMtNDFlNS00MWRhLWIyYzEtNjUzZGY0N2YyNMI4XkEyXkFqcGdeQXVyNjE2MjQwNjc@._V1_FMjpg_UX1000_.jpg",
-    rate: 8.1,
-    description: "After his son is captured in the Great Barrier Reef and taken to Sydney, a timid clownfish sets out on a journey to bring him home.",
-    trailerLink: "https://www.youtube.com/watch?v=2zLkasScy7A",
-    movieLength: "100 min",
-  },
-  {
-    title: "Jurassic Park",
-    genre: ["Action", "Sci-Fi", "Thriller"],
-    image: "https://m.media-amazon.com/images/M/MV5BMjM2MDgxMDg0Nl5BMl5BanBnXkFtZTgwNTM2OTM5NDE@._V1_FMjpg_UX1000_.jpg",
-    rate: 8.1,
-    description: "A pragmatic paleontologist visiting an almost complete theme park on an island in Central America is tasked with protecting a couple of kids after a power failure causes the park's cloned dinosaurs to run loose.",
-    trailerLink: "https://www.youtube.com/watch?v=lc0UehYemmI",
-    movieLength: "127 min",
-  },
-  {
-    title: "The Exorcist",
-    genre: ["Horror"],
-    image: "https://m.media-amazon.com/images/M/MV5BYzFlOTJjYzYtYjBhOS00ZmFmLWJjYTEtY2FhODE1MWY5YjU4XkEyXkFqcGdeQXVyNTAyODkwOQ@@._V1_FMjpg_UX1000_.jpg",
-    rate: 8.0,
-    description: "When a 12-year-old girl is possessed by a mysterious entity, her mother seeks the help of two priests to save her.",
-    trailerLink: "https://www.youtube.com/watch?v=YDGw1MTEe9k",
-    movieLength: "122 min",
-  },
-  {
-    title: "The Shining",
-    genre: ["Drama", "Horror"],
-    image: "https://m.media-amazon.com/images/M/MV5BZWFlYmY2MGEtZjVkYS00YzU4LTg0YjQtYzY1ZGE3NTA5NGQxXkEyXkFqcGdeQXVyMTQxNzMzNDI@._V1_FMjpg_UX1000_.jpg",
-    rate: 8.4,
-    description: "A family heads to an isolated hotel for the winter where a sinister presence influences the father into violence, while his psychic son sees horrific forebodings from both past and future.",
-    trailerLink: "https://www.youtube.com/watch?v=5Cb3ik6zP2I",
-    movieLength: "146 min",
-  },
-  {
-    title: "A Quiet Place",
-    genre: ["Drama", "Horror", "Sci-Fi"],
-    image: "https://m.media-amazon.com/images/M/MV5BMjI0MDMzNTQ0M15BMl5BanBnXkFtZTgwMTM5NzM3NDM@._V1_FMjpg_UX1000_.jpg",
-    rate: 7.5,
-    description: "In a post-apocalyptic world, a family is forced to live in silence while hiding from monsters with ultra-sensitive hearing.",
-    trailerLink: "https://www.youtube.com/watch?v=WR7cc5t7tv8",
-    movieLength: "90 min",
-  },
-  {
-    title: "Get Out",
-    genre: ["Horror", "Mystery", "Thriller"],
-    image: "https://m.media-amazon.com/images/M/MV5BMjUxMDQwNjcyNl5BMl5BanBnXkFtZTgwNzcwMzc0MTI@._V1_FMjpg_UX1000_.jpg",
-    rate: 7.7,
-    description: "A young African-American visits his white girlfriend's parents for the weekend, where his simmering uneasiness about their reception of him eventually reaches a boiling point.",
-    trailerLink: "https://www.youtube.com/watch?v=sRfnevzM9kI",
-    movieLength: "104 min",
-  },
-  {
-    title: "Hereditary",
-    genre: ["Drama", "Horror", "Mystery"],
-    image: "https://m.media-amazon.com/images/M/MV5BOTU5MDg3OGItZWQ1Ny00ZGVmLTg2YTUtMzBkMjI1ZGIwZTJmXkEyXkFqcGdeQXVyNTAzMTY4MDA@._V1_FMjpg_UX1000_.jpg",
-    rate: 7.3,
-    description: "A grieving family is haunted by tragic and disturbing occurrences after the death of their secretive grandmother.",
-    trailerLink: "https://www.youtube.com/watch?v=V6wWKNij_1M",
-    movieLength: "127 min",
-  },
-  {
-    title: "The Conjuring",
-    genre: ["Horror", "Mystery", "Thriller"],
-    image: "https://m.media-amazon.com/images/M/MV5BMTM3NjA1NDMyMV5BMl5BanBnXkFtZTcwMDQzNDMzOQ@@._V1_FMjpg_UX1000_.jpg",
-    rate: 7.5,
-    description: "Paranormal investigators Ed and Lorraine Warren work to help a family terrorized by a dark presence in their farmhouse.",
-    trailerLink: "https://www.youtube.com/watch?v=k10ETZ41q5o",
-    movieLength: "112 min",
-  },
-  {
-    title: "It",
-    genre: ["Horror"],
-    image: "https://m.media-amazon.com/images/M/MV5BZDVkZmI0YzAtNzdjYi00ZjhhLWE1ODEtMWMzMWMzNDA0NmQ4XkEyXkFqcGdeQXVyNzYzODM3Mzg@._V1_FMjpg_UX1000_.jpg",
-    rate: 7.3,
-    description: "In the summer of 1989, a group of bullied kids band together to destroy a shape-shifting monster, which disguises itself as a clown and preys on the children of Derry, their small Maine town.",
-    trailerLink: "https://www.youtube.com/watch?v=FnCdOQsX5kc",
-    movieLength: "135 min",
-  },
-  {
-    title: "The Notebook",
-    genre: ["Drama", "Romance"],
-    image: "https://m.media-amazon.com/images/M/MV5BMTk3OTM5Njg5M15BMl5BanBnXkFtZTYwMzA0ODI3._V1_FMjpg_UX1000_.jpg",
-    rate: 7.8,
-    description: "A poor yet passionate young man falls in love with a rich young woman, giving her a sense of freedom, but they are soon separated because of their social differences.",
-    trailerLink: "https://www.youtube.com/watch?v=FC6biTjEyZw",
-    movieLength: "123 min",
-  },
-  {
-    title: "Titanic",
-    genre: ["Drama", "Romance"],
-    image: "https://m.media-amazon.com/images/M/MV5BMDdmZGU3NDQtY2E5My00ZTliLWIzOTUtMTY4ZGI1YjdiNjk3XkEyXkFqcGdeQXVyNTA4NzY1MzY@._V1_FMjpg_UX1000_.jpg",
-    rate: 7.8,
-    description: "A seventeen-year-old aristocrat falls in love with a kind but poor artist aboard the luxurious, ill-fated R.M.S. Titanic.",
-    trailerLink: "https://www.youtube.com/watch?v=2e-eXJ6HgkQ",
-    movieLength: "194 min",
-  },
-  {
-    title: "La La Land",
-    genre: ["Comedy", "Drama", "Romance"],
-    image: "https://m.media-amazon.com/images/M/MV5BMzUzNDM2NzM2MV5BMl5BanBnXkFtZTgwNTM3NTg4OTE@._V1_FMjpg_UX1000_.jpg",
-    rate: 8.0,
-    description: "While navigating their careers in Los Angeles, a pianist and an actress fall in love while attempting to reconcile their aspirations for the future.",
-    trailerLink: "https://www.youtube.com/watch?v=0pdqf4P9MB8",
-    movieLength: "128 min",
-  },
-  {
-    title: "Eternal Sunshine of the Spotless Mind",
-    genre: ["Drama", "Romance", "Sci-Fi"],
-    image: "https://m.media-amazon.com/images/M/MV5BMTY4NzcwODg3Nl5BMl5BanBnXkFtZTcwNTEwOTMyMw@@._V1_FMjpg_UX1000_.jpg",
-    rate: 8.3,
-    description: "When their relationship turns sour, a couple undergoes a medical procedure to have each other erased from their memories.",
-    trailerLink: "https://www.youtube.com/watch?v=yE-f1alkU44",
-    movieLength: "108 min",
-  },
-  {
-    title: "About Time",
-    genre: ["Comedy", "Drama", "Fantasy"],
-    image: "https://m.media-amazon.com/images/M/MV5BMTA1ODUzMDA3NzFeQTJeQWpwZ15BbWU3MDgxMTYxNTc@._V1_FMjpg_UX1000_.jpg",
-    rate: 7.8,
-    description: "At the age of 21, Tim discovers he can travel in time and change what happens and has happened in his own life. His decision to make his world a better place by getting a girlfriend turns out not to be as easy as you might think.",
-    trailerLink: "https://www.youtube.com/watch?v=T7A810zuh1A",
-    movieLength: "123 min",
-  },
-  {
-    title: "Blade Runner 2049",
-    genre: ["Action", "Drama", "Mystery"],
-    image: "https://m.media-amazon.com/images/M/MV5BNzA1Njg4NzYxOV5BMl5BanBnXkFtZTgwODk5NjU3MzI@._V1_FMjpg_UX1000_.jpg",
-    rate: 8.0,
-    description: "Young Blade Runner K's discovery of a long-buried secret leads him to track down former Blade Runner Rick Deckard, who's been missing for thirty years.",
-    trailerLink: "https://www.youtube.com/watch?v=gCcx85zbxz4",
-    movieLength: "164 min",
-  },
-  {
-    title: "Interstellar",
-    genre: ["Drama", "Sci-Fi"],
-    image: "https://m.media-amazon.com/images/M/MV5BZjdkOTU3MDktN2IxOS00OGEyLWFmMjktY2FiMmZkNWIyODZiXkEyXkFqcGdeQXVyMTMxODk2OTU@._V1_FMjpg_UX1000_.jpg",
-    rate: 8.6,
-    description: "A team of explorers travel through a wormhole in space in an attempt to ensure humanity's survival.",
-    trailerLink: "https://www.youtube.com/watch?v=zSWdZVtXT7E",
-    movieLength: "169 min",
-  },
-  {
-    title: "Arrival",
-    genre: ["Drama", "Sci-Fi"],
-    image: "https://m.media-amazon.com/images/M/MV5BMTExMzU0ODcxNDheQTJeQWpwZ15BbWU4MDE1OTI4MzAy._V1_FMjpg_UX1000_.jpg",
-    rate: 7.9,
-    description: "A linguist works with the military to communicate with alien lifeforms after twelve mysterious spacecraft appear around the world.",
-    trailerLink: "https://www.youtube.com/watch?v=tFMo3UJ4B4g",
-    movieLength: "116 min",
-  },
-  {
-    title: "The Lord of the Rings: The Fellowship of the Ring",
-    genre: ["Action", "Drama", "Fantasy"],
-    image: "https://m.media-amazon.com/images/M/MV5BN2EyZjM3NzUtNWUzMi00MTgxLWI0NTctMzY4M2VlOTdjZWRiXkEyXkFqcGdeQXVyNDUzOTQ5MjY@._V1_FMjpg_UX1000_.jpg",
-    rate: 8.8,
-    description: "A meek Hobbit from the Shire and eight companions set out on a journey to destroy the powerful One Ring and save Middle-earth from the Dark Lord Sauron.",
-    trailerLink: "https://www.youtube.com/watch?v=V75dMMIW2B4",
-    movieLength: "178 min",
-  },
-  {
-    title: "Harry Potter and the Sorcerer's Stone",
-    genre: ["Fantasy", "Mystery"],
-    image: "https://m.media-amazon.com/images/M/MV5BNjQ3NWNlNmQtMTE5ZS00MDdmLTlkZjUtZTBlM2UxMGFiMTU3XkEyXkFqcGdeQXVyNjUwNzk3NDc@._V1_FMjpg_UX1000_.jpg",
-    rate: 7.6,
-    description: "An orphaned boy enrolls in a school of wizardry, where he learns the truth about himself, his family and the terrible evil that haunts the magical world.",
-    trailerLink: "https://www.youtube.com/watch?v=VyHV0BRtdxo",
-    movieLength: "152 min",
-  },
-  {
-    title: "Pan's Labyrinth",
-    genre: ["Drama", "Fantasy", "Thriller"],
-    image: "https://m.media-amazon.com/images/M/MV5BMTU5ODQ0OTQ3Nl5BMl5BanBnXkFtZTcwMzg2OTM2OQ@@._V1_FMjpg_UX1000_.jpg",
-    rate: 8.2,
-    description: "In the Falangist Spain of 1944, the bookish young stepdaughter of a sadistic army officer escapes into an eerie but captivating fantasy world.",
-    trailerLink: "https://www.youtube.com/watch?v=EqYiSlkvRuw",
-    movieLength: "118 min",
-  },
-  {
-    title: "Spirited Away",
-    genre: ["Fantasy", "Mystery"],
-    image: "https://m.media-amazon.com/images/M/MV5BMjlmZmI5MDctNDE2YS00YWE0LWE5ZWItZDBhYWQ0NTcxNWRhXkEyXkFqcGdeQXVyMTMxODk2OTU@._V1_FMjpg_UX1000_.jpg",
-    rate: 8.6,
-    description: "During her family's move to the suburbs, a sullen 10-year-old girl wanders into a world ruled by gods, witches, and spirits, and where humans are changed into beasts.",
-    trailerLink: "https://www.youtube.com/watch?v=ByXuk9QqQkk",
-    movieLength: "125 min",
-  },
-];
+  isUpcoming: { type: Boolean, default: false },
+  releaseDate: { type: String, default: "" },
+});
 
-const seedDB = async () => {
-  await mongoose.connect(process.env.MONGO_URL, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  });
+const Movie = mongoose.model("Movie", movieSchema);
 
-  await User.deleteMany({});
-  await Genre.deleteMany({});
-  const createdGenres = await Genre.insertMany(genres);
-
-  await Movie.deleteMany({});
-  const moviesWithGenreIds = movies.map(movie => {
-    const genreIds = movie.genre.map(genreName => {
-      const genre = createdGenres.find(g => g.name === genreName);
-      return genre._id;
-    });
-    return { ...movie, genre: genreIds };
-  });
-
-  await Movie.insertMany(moviesWithGenreIds);
-
-  console.log("Database seeded!");
-  mongoose.connection.close();
+const streamingLinks = {
+  "The Dark Knight":        { prime: "https://www.primevideo.com/detail/The-Dark-Knight/0I8EBSOBBSDT5CJQPW7JCNIOZE", netflix: "", hotstar: "", youtube: "" },
+  "Inception":              { netflix: "https://www.netflix.com/title/70131314", prime: "", hotstar: "", youtube: "" },
+  "The Matrix":             { prime: "https://www.primevideo.com/detail/The-Matrix/0TS9BFPEZ8HPSDNXKPUBNWBXEX", netflix: "", hotstar: "", youtube: "" },
+  "Gladiator":              { prime: "https://www.primevideo.com/detail/Gladiator/0GY5YKQEWMSMKQIIACC0KDAQZE", netflix: "", hotstar: "", youtube: "" },
+  "Avengers Endgame":       { hotstar: "https://www.hotstar.com/in/movies/avengers-endgame/1260010547", netflix: "", prime: "", youtube: "" },
+  "John Wick":              { prime: "https://www.primevideo.com/detail/John-Wick/0SZZEVZASBT0ZKPQWMEAXMHZCE", netflix: "", hotstar: "", youtube: "" },
+  "Mad Max Fury Road":      { netflix: "https://www.netflix.com/title/80028702", prime: "", hotstar: "", youtube: "" },
+  "Die Hard":               { prime: "https://www.primevideo.com/detail/Die-Hard/0TIYNUBS4CXNWVXNODRJ5KYVCE", netflix: "", hotstar: "", youtube: "" },
+  "Mission Impossible":     { prime: "https://www.primevideo.com/detail/Mission-Impossible/0S1MG5EBTXF6WLMHW4LXKJVCE", netflix: "", hotstar: "", youtube: "" },
+  "Top Gun Maverick":       { prime: "https://www.primevideo.com/detail/Top-Gun-Maverick/0SVNFMHGEZXH8KBZSE1QHBPCE", netflix: "", hotstar: "", youtube: "" },
+  "Batman Begins":          { prime: "https://www.primevideo.com/detail/Batman-Begins/0ROSDB9ODE6TXZXQKB8CBHYPCE", netflix: "", hotstar: "", youtube: "" },
+  "Iron Man":               { hotstar: "https://www.hotstar.com/in/movies/iron-man/1260000823", netflix: "", prime: "", youtube: "" },
+  "The Shawshank Redemption": { prime: "https://www.primevideo.com/detail/The-Shawshank-Redemption/0S1MG5EBTXF6WLMHW4LXKJVCE", netflix: "", hotstar: "", youtube: "" },
+  "The Godfather":          { prime: "https://www.primevideo.com/detail/The-Godfather/0TIYNUBS4CXNWVXNODRJ5KYVCE", netflix: "", hotstar: "", youtube: "" },
+  "Forrest Gump":           { prime: "https://www.primevideo.com/detail/Forrest-Gump/0SY4NQNM5GXQ5XOABDTM1QPCE", netflix: "", hotstar: "", youtube: "" },
+  "Schindler's List":       { prime: "https://www.primevideo.com/detail/Schindlers-List/0I1ZEKQR4NJKWSMQHIIBVWXPCE", netflix: "", hotstar: "", youtube: "" },
+  "Good Will Hunting":      { netflix: "https://www.netflix.com/title/17236542", prime: "", hotstar: "", youtube: "" },
+  "A Beautiful Mind":       { prime: "https://www.primevideo.com/detail/A-Beautiful-Mind/0IHTSPM1YS5MZAHMQBIZOLOYX9", netflix: "", hotstar: "", youtube: "" },
+  "The Green Mile":         { prime: "https://www.primevideo.com/detail/The-Green-Mile/0ROSDB9ODE6TXZXQKB8CBHYPCE", netflix: "", hotstar: "", youtube: "" },
+  "12 Angry Men":           { prime: "https://www.primevideo.com/detail/12-Angry-Men/0TIYNUBS4CXNWVXNODRJ5KYVCE", netflix: "", hotstar: "", youtube: "" },
+  "Whiplash":               { netflix: "https://www.netflix.com/title/70299275", prime: "", hotstar: "", youtube: "" },
+  "The Pursuit of Happyness": { netflix: "https://www.netflix.com/title/70044605", prime: "", hotstar: "", youtube: "" },
+  "Interstellar":           { prime: "https://www.primevideo.com/detail/Interstellar/0IHTSPM1YS5MZAHMQBIZOLOYX9", netflix: "", hotstar: "", youtube: "" },
+  "Arrival":                { prime: "https://www.primevideo.com/detail/Arrival/0S1MG5EBTXF6WLMHW4LXKJVCE", netflix: "", hotstar: "", youtube: "" },
+  "The Martian":            { hotstar: "https://www.hotstar.com/in/movies/the-martian/1260000823", netflix: "", prime: "", youtube: "" },
+  "Gravity":                { netflix: "https://www.netflix.com/title/70263348", prime: "", hotstar: "", youtube: "" },
+  "Ex Machina":             { prime: "https://www.primevideo.com/detail/Ex-Machina/0SZZEVZASBT0ZKPQWMEAXMHZCE", netflix: "", hotstar: "", youtube: "" },
+  "2001 A Space Odyssey":   { prime: "https://www.primevideo.com/detail/2001-A-Space-Odyssey/0TIYNUBS4CXNWVXNODRJ5KYVCE", netflix: "", hotstar: "", youtube: "" },
+  "Blade Runner 2049":      { netflix: "https://www.netflix.com/title/80185621", prime: "", hotstar: "", youtube: "" },
+  "District 9":             { netflix: "https://www.netflix.com/title/70113536", prime: "", hotstar: "", youtube: "" },
+  "Dune":                   { hotstar: "https://www.hotstar.com/in/movies/dune/1260090471", netflix: "", prime: "", youtube: "" },
+  "Avatar":                 { hotstar: "https://www.hotstar.com/in/movies/avatar/1260000823", netflix: "", prime: "", youtube: "" },
+  "Pulp Fiction":           { netflix: "https://www.netflix.com/title/880717", prime: "", hotstar: "", youtube: "" },
+  "Goodfellas":             { prime: "https://www.primevideo.com/detail/Goodfellas/0ROSDB9ODE6TXZXQKB8CBHYPCE", netflix: "", hotstar: "", youtube: "" },
+  "Fight Club":             { prime: "https://www.primevideo.com/detail/Fight-Club/0I1ZEKQR4NJKWSMQHIIBVWXPCE", netflix: "", hotstar: "", youtube: "" },
+  "The Silence of the Lambs": { prime: "https://www.primevideo.com/detail/The-Silence-of-the-Lambs/0S1MG5EBTXF6WLMHW4LXKJVCE", netflix: "", hotstar: "", youtube: "" },
+  "Se7en":                  { netflix: "https://www.netflix.com/title/26005766", prime: "", hotstar: "", youtube: "" },
+  "No Country for Old Men": { prime: "https://www.primevideo.com/detail/No-Country-for-Old-Men/0TIYNUBS4CXNWVXNODRJ5KYVCE", netflix: "", hotstar: "", youtube: "" },
+  "The Departed":           { prime: "https://www.primevideo.com/detail/The-Departed/0IHTSPM1YS5MZAHMQBIZOLOYX9", netflix: "", hotstar: "", youtube: "" },
+  "Prisoners":              { prime: "https://www.primevideo.com/detail/Prisoners/0ROSDB9ODE6TXZXQKB8CBHYPCE", netflix: "", hotstar: "", youtube: "" },
+  "Gone Girl":              { hotstar: "https://www.hotstar.com/in/movies/gone-girl/1260000823", netflix: "", prime: "", youtube: "" },
+  "Zodiac":                 { prime: "https://www.primevideo.com/detail/Zodiac/0SZZEVZASBT0ZKPQWMEAXMHZCE", netflix: "", hotstar: "", youtube: "" },
+  "Titanic":                { prime: "https://www.primevideo.com/detail/Titanic/0SZZEVZASBT0ZKPQWMEAXMHZCE", netflix: "", hotstar: "", youtube: "" },
+  "The Lion King":          { hotstar: "https://www.hotstar.com/in/movies/the-lion-king/1260008394", netflix: "", prime: "", youtube: "" },
+  "Toy Story":              { hotstar: "https://www.hotstar.com/in/movies/toy-story/1260000823", netflix: "", prime: "", youtube: "" },
+  "The Shining":            { prime: "https://www.primevideo.com/detail/The-Shining/0TIYNUBS4CXNWVXNODRJ5KYVCE", netflix: "", hotstar: "", youtube: "" },
+  "Parasite":               { prime: "https://www.primevideo.com/detail/Parasite/0S1MG5EBTXF6WLMHW4LXKJVCE", netflix: "", hotstar: "", youtube: "" },
+  "Joker":                  { hotstar: "https://www.hotstar.com/in/movies/joker/1260009252", netflix: "", prime: "", youtube: "" },
+  "1917":                   { prime: "https://www.primevideo.com/detail/1917/0SVNFMHGEZXH8KBZSE1QHBPCE", netflix: "", hotstar: "", youtube: "" },
+  "Dunkirk":                { prime: "https://www.primevideo.com/detail/Dunkirk/0ROSDB9ODE6TXZXQKB8CBHYPCE", netflix: "", hotstar: "", youtube: "" },
+  "Oppenheimer":            { prime: "https://www.primevideo.com/detail/Oppenheimer/0SVNFMHGEZXH8KBZSE1QHBPCE", netflix: "", hotstar: "", youtube: "" },
+  "Tenet":                  { prime: "https://www.primevideo.com/detail/Tenet/0IHTSPM1YS5MZAHMQBIZOLOYX9", netflix: "", hotstar: "", youtube: "" },
 };
 
-seedDB();
+const movieTitles = [
+  "Baahubali: The Beginning","The Dark Knight", "Inception", "The Matrix", "Gladiator","Housefull 5",
+  "Avengers Endgame", "John Wick", "Mad Max Fury Road", "Die Hard",
+  "Mission Impossible", "Top Gun Maverick", "Batman Begins", "Iron Man",
+  "The Shawshank Redemption", "The Godfather", "Forrest Gump",
+  "Schindler's List", "Good Will Hunting", "A Beautiful Mind",
+  "The Green Mile", "12 Angry Men", "Whiplash", "The Pursuit of Happyness",
+  "Interstellar", "Arrival", "The Martian", "Gravity",
+  "Ex Machina", "2001 A Space Odyssey", "Blade Runner 2049",
+  "District 9", "Dune", "Avatar",
+  "Pulp Fiction", "Goodfellas", "Fight Club",
+  "The Silence of the Lambs", "Se7en", "No Country for Old Men",
+  "The Departed", "Prisoners", "Gone Girl", "Zodiac",
+  "Titanic", "The Lion King", "Toy Story",
+  "The Shining", "Parasite", "Joker",
+  "1917", "Dunkirk", "Oppenheimer", "Tenet",
+];
+
+function fetchMovie(title) {
+  return new Promise((resolve, reject) => {
+    const url = `https://www.omdbapi.com/?t=${encodeURIComponent(title)}&apikey=${OMDB_API_KEY}`;
+    https.get(url, (res) => {
+      let data = "";
+      res.on("data", (chunk) => (data += chunk));
+      res.on("end", () => resolve(JSON.parse(data)));
+    }).on("error", reject);
+  });
+}
+
+function fetchTrailer(title) {
+  return new Promise((resolve, reject) => {
+    const query = encodeURIComponent(`${title} official trailer`);
+    const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${query}&key=${YOUTUBE_API_KEY}&type=video&maxResults=1`;
+    https.get(url, (res) => {
+      let data = "";
+      res.on("data", (chunk) => (data += chunk));
+      res.on("end", () => {
+        const result = JSON.parse(data);
+        if (result.items && result.items.length > 0) {
+          const videoId = result.items[0].id.videoId;
+          resolve(`https://www.youtube.com/watch?v=${videoId}`);
+        } else {
+          resolve("");
+        }
+      });
+    }).on("error", reject);
+  });
+}
+
+const trailerLinks = {
+  "Housefull 5" : "https://www.youtube.com/watch?v=xGQuT1wm2qk",
+  "Baahubali: The Beginning": "https://www.youtube.com/watch?v=3NQRhE772b0",
+  "The Dark Knight":          "https://www.youtube.com/watch?v=EXeTwQWrcwY",
+  "Inception":                "https://www.youtube.com/watch?v=YoHD9XEInc0",
+  "The Matrix":               "https://www.youtube.com/watch?v=vKQi3bBA1y8",
+  "Gladiator":                "https://www.youtube.com/watch?v=owK1qxDselE",
+  "Avengers Endgame":         "https://www.youtube.com/watch?v=TcMBFSGVi1c",
+  "John Wick":                "https://www.youtube.com/watch?v=2AUmvWm5ZDQ",
+  "Mad Max Fury Road":        "https://www.youtube.com/watch?v=hEJnMQG9ev8",
+  "Die Hard":                 "https://www.youtube.com/watch?v=jaJuwKCmJbY",
+  "Mission Impossible":       "https://www.youtube.com/watch?v=4aKfNMQa8KU",
+  "Top Gun Maverick":         "https://www.youtube.com/watch?v=giXco2jaZ_4",
+  "Batman Begins":            "https://www.youtube.com/watch?v=neY2xVmOfUM",
+  "Iron Man":                 "https://www.youtube.com/watch?v=8ugaeA-nMTc",
+  "The Shawshank Redemption": "https://www.youtube.com/watch?v=6hB3S9bIaco",
+  "The Godfather":            "https://www.youtube.com/watch?v=sY1S34973zA",
+  "Forrest Gump":             "https://www.youtube.com/watch?v=bLvqoHBptjg",
+  "Schindler's List":         "https://www.youtube.com/watch?v=gG22XNhtnoY",
+  "Good Will Hunting":        "https://www.youtube.com/watch?v=ReIGvBNNMB0",
+  "A Beautiful Mind":         "https://www.youtube.com/watch?v=YWwAOutgWBQ",
+  "The Green Mile":           "https://www.youtube.com/watch?v=Ki4haFrqSrw",
+  "12 Angry Men":             "https://www.youtube.com/watch?v=F7OSZDE5ey0",
+  "Whiplash":                 "https://www.youtube.com/watch?v=7d_jQycdQGo",
+  "The Pursuit of Happyness": "https://www.youtube.com/watch?v=DMOBlEcRuw8",
+  "Interstellar":             "https://www.youtube.com/watch?v=zSWdZVtXT7E",
+  "Arrival":                  "https://www.youtube.com/watch?v=tFMo3UJ4B4g",
+  "The Martian":              "https://www.youtube.com/watch?v=Ue4PCI0NamI",
+  "Gravity":                  "https://www.youtube.com/watch?v=OiTiKEKoA8",
+  "Ex Machina":               "https://www.youtube.com/watch?v=EoQuVnKhxaM",
+  "2001 A Space Odyssey":     "https://www.youtube.com/watch?v=oR_e9y-bka0",
+  "Blade Runner 2049":        "https://www.youtube.com/watch?v=gCcx85zbxz4",
+  "District 9":               "https://www.youtube.com/watch?v=DyLUwOcR5pk",
+  "Dune":                     "https://www.youtube.com/watch?v=8g18jFHCLXk",
+  "Avatar":                   "https://www.youtube.com/watch?v=5PSNL1qE6VY",
+  "Pulp Fiction":             "https://www.youtube.com/watch?v=s7EdQ4FqbhY",
+  "Goodfellas":               "https://www.youtube.com/watch?v=qo5jJpHtI1Y",
+  "Fight Club":               "https://www.youtube.com/watch?v=qtRKdVHc-cE",
+  "The Silence of the Lambs": "https://www.youtube.com/watch?v=W6Mm8Sbe__o",
+  "Se7en":                    "https://www.youtube.com/watch?v=znmZoVkCjpI",
+  "No Country for Old Men":   "https://www.youtube.com/watch?v=38A__WT3-o0",
+  "The Departed":             "https://www.youtube.com/watch?v=iNb4WGs2OEk",
+  "Prisoners":                "https://www.youtube.com/watch?v=0bKkGeROiPA",
+  "Gone Girl":                "https://www.youtube.com/watch?v=2-UuiH03c9E",
+  "Zodiac":                   "https://www.youtube.com/watch?v=f9cDKbmCD0o&t",
+  "Titanic":                  "https://www.youtube.com/watch?v=2e-eXJ6HgkQ",
+  "The Lion King":            "https://www.youtube.com/watch?v=7TavVZMewpY",
+  "Toy Story":                "https://www.youtube.com/watch?v=KYz2wyBy3kc",
+  "The Shining":              "https://www.youtube.com/watch?v=5Cb3ik6zP2I",
+  "Parasite":                 "https://www.youtube.com/watch?v=5xH0HfJHsaY",
+  "Joker":                    "https://www.youtube.com/watch?v=zAGVQLHvwOY",
+  "1917":                     "https://www.youtube.com/watch?v=YqNYrYUiMfg",
+  "Dunkirk":                  "https://www.youtube.com/watch?v=F-eMt3SrfFU",
+  "Oppenheimer":              "https://www.youtube.com/watch?v=uYPbbksJxIg",
+  "Tenet":                    "https://www.youtube.com/watch?v=LdOM0x0XDMo",
+};
+
+const upcomingMovies = [
+  {
+    title: "Avatar 3",
+    releaseDate: "2026-12-19",
+    description: "The third installment of James Cameron's Avatar saga continues the story of the Sully family.",
+    image: "https://m.media-amazon.com/images/M/MV5BODkzZDQ5OTQtMzM4Zi00ZWVlLTkxMjQtOTg0NmU3ZjYyZjNkXkEyXkFqcGdeQXVyMTkxNjUyNQ@@._V1_SX300.jpg",
+    trailerLink: "https://www.youtube.com/watch?v=5PSNL1qE6VY",
+    genre: ["Action", "Adventure", "Sci-Fi"],
+    isUpcoming: true,
+    rate: 0,
+    movieLength: 0,
+  },
+  {
+    title: "Avengers: Doomsday",
+    releaseDate: "2026-05-01",
+    description: "The Avengers face their greatest threat yet as Doctor Doom arrives to change everything.",
+    image: "https://m.media-amazon.com/images/M/MV5BNGQwNDMzNmQtMWRjZC00NjA5LTkxNjQtZTQ3NDgwMGI1YzVlXkEyXkFqcGdeQXVyMTkxNjUyNQ@@._V1_SX300.jpg",
+    trailerLink: "https://www.youtube.com/watch?v=TcMBFSGVi1c",
+    genre: ["Action", "Adventure", "Sci-Fi"],
+    isUpcoming: true,
+    rate: 0,
+    movieLength: 0,
+  },
+  {
+    title: "Mission: Impossible 8",
+    releaseDate: "2026-05-22",
+    description: "Ethan Hunt returns for the final chapter of the Mission Impossible saga.",
+    image: "https://m.media-amazon.com/images/M/MV5BYzExMjhiZmYtZGQyNy00NGM4LTk2NjAtOTc4MDljMzA3MjkxXkEyXkFqcGdeQXVyODk4OTc3MDY@._V1_SX300.jpg",
+    trailerLink: "https://www.youtube.com/watch?v=avz06PDqDbM",
+    genre: ["Action", "Thriller"],
+    isUpcoming: true,
+    rate: 0,
+    movieLength: 0,
+  },
+  {
+    title: "Jurassic World Rebirth",
+    releaseDate: "2026-07-02",
+    description: "A new chapter in the Jurassic World franchise with a completely fresh cast and story.",
+    image: "https://m.media-amazon.com/images/M/MV5BZjZjZjZkZTItNzNiOS00MjM2LTk4YTAtNGUxOWVkNzMzNTBhXkEyXkFqcGdeQXVyMTkxNjUyNQ@@._V1_SX300.jpg",
+    trailerLink: "https://www.youtube.com/watch?v=aJJrkyHas78",
+    genre: ["Action", "Adventure", "Sci-Fi"],
+    isUpcoming: true,
+    rate: 0,
+    movieLength: 0,
+  },
+  {
+    title: "Superman",
+    releaseDate: "2026-07-11",
+    description: "James Gunn's highly anticipated reboot of Superman for the new DC Universe.",
+    image: "https://m.media-amazon.com/images/M/MV5BZjI0ZWFmZDQtMzliOS00YmE4LWE3ZTItMWM4ZjY2ZmE1ZmJiXkEyXkFqcGdeQXVyMTkxNjUyNQ@@._V1_SX300.jpg",
+    trailerLink: "https://www.youtube.com/watch?v=KVu3gS7iJu4",
+    genre: ["Action", "Adventure"],
+    isUpcoming: true,
+    rate: 0,
+    movieLength: 0,
+  },
+  {
+    title: "Black Panther 3",
+    releaseDate: "2026-11-06",
+    description: "The next chapter in the Black Panther saga from Marvel Studios.",
+    image: "https://m.media-amazon.com/images/M/MV5BNTM4NjIxNmEtYWE5NS00NDczLTkyNWQtYThhNmQyZGQzMjM0XkEyXkFqcGdeQXVyODk4OTc3MDY@._V1_SX300.jpg",
+    trailerLink: "https://www.youtube.com/watch?v=_Z3QKkl1WyM",
+    genre: ["Action", "Adventure"],
+    isUpcoming: true,
+    rate: 0,
+    movieLength: 0,
+  },
+];
+
+async function seedMovies() {
+  try {
+    await mongoose.connect(MONGO_URL, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+    });
+    console.log("MongoDB connected...");
+
+    await Movie.deleteMany({});
+    await Genre.deleteMany({});
+    console.log("Cleared existing data...");
+
+    const genreNames = ["Action", "Crime", "Drama", "Sci-Fi", "Thriller",
+      "Adventure", "Biography", "Romance", "Mystery", "History"];
+    const genreDocs = await Genre.insertMany(genreNames.map(name => ({ name })));
+    console.log("✅ Genres created!");
+
+    const genreMap = {};
+    genreDocs.forEach(g => genreMap[g.name] = g._id);
+
+    const movies = [];
+
+    for (const title of movieTitles) {
+      const data = await fetchMovie(title);
+      if (data.Response === "True") {
+         
+        const genreIds = data.Genre.split(", ")
+          .map(g => genreMap[g.trim()])
+          .filter(Boolean);
+
+        movies.push({
+          title: data.Title,
+          genre: genreIds,
+          rate: parseFloat(data.imdbRating) || 0,
+          description: data.Plot,
+          image: data.Poster !== "N/A" ? data.Poster : "",
+          trailerLink: trailerLinks[title] || "",
+          movieLength: parseInt(data.Runtime) || 0,
+          whereToWatch: streamingLinks[title] || { netflix: "", prime: "", hotstar: "", youtube: "" }, // ← KEY LINE
+        });
+        console.log(`✅ Fetched: ${data.Title} | Trailer: ${trailerLinks[title]  ? "✅" : "❌"}`);
+      } else {
+        console.log(`❌ Not found: ${title}`);
+      }
+    }
+
+    await Movie.insertMany(movies);
+    console.log(`\n🎬 ${movies.length} movies added successfully!`);
+
+  // Save upcoming movies with OMDb posters
+const upcomingWithGenres = [];
+
+for (const movie of upcomingMovies) {
+  const omdbData = await fetchMovie(movie.title);
+  const poster = omdbData.Response === "True" && omdbData.Poster !== "N/A"
+    ? omdbData.Poster
+    : movie.image;
+
+  upcomingWithGenres.push({
+    ...movie,
+    image: poster,
+    genre: movie.genre.map(g => genreMap[g]).filter(Boolean),
+  });
+  console.log(`🎬 Upcoming: ${movie.title} | Poster: ${poster ? "✅" : "❌"}`);
+}
+
+await Movie.insertMany(upcomingWithGenres);
+console.log(`✅ ${upcomingMovies.length} upcoming movies added!`);
+
+    mongoose.connection.close();
+  } catch (err) {
+    console.log("Error:", err);
+  }
+}
+
+seedMovies();

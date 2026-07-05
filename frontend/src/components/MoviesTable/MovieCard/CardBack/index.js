@@ -4,6 +4,34 @@ import "./style.css";
 
 const addToWatchlist = async (e, movieId) => {
   e.stopPropagation();
+  const addToWatchlist = async (e, movieId) => {
+  e.stopPropagation();
+  
+ 
+
+  try {
+    const user = JSON.parse(localStorage.getItem("user"));
+
+    if (!user) {
+      alert("Please login first");
+      return;
+    }
+
+    await axios.post(
+      `/api/users/${user.user.id}/watchlist/${movieId}`
+    );
+
+    alert("✅ Added to Watchlist");
+  } catch (err) {
+    console.log(err);
+       
+
+
+    if (err.response?.status === 400) {
+      alert("⚠️ Already in Watchlist");
+    }
+  }
+};
 
   try {
     const user = JSON.parse(localStorage.getItem("user"));
