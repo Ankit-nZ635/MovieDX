@@ -216,9 +216,9 @@ Open **http://localhost:3000** in your browser 🚀
  
 ### 📺 Where to Watch
 ![Movie Card](public/screenshots/movie-card.png)
-
-### 📺 Watchlist
-![watchlist](public/screenshots/watchlist.png)
+ 
+### 📝 Watchlist Page
+![Watchlist](public/screenshots/watchlist.png)
 
 ### 🔐 Login Page
 ![Login](public/screenshots/login.png)
