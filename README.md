@@ -133,7 +133,7 @@ MovieDX/
 ### 1️⃣ Clone the repository
 ```bash
 git clone https://github.com/Ankit-nZ635/MovieDX.git
-cd MovieDX/iCinema
+cd MovieDX/MovieDX
 ```
 
 ### 2️⃣ Install dependencies
