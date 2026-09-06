@@ -11,7 +11,7 @@
     "seed": "node utils/seed.js",
     "server": "cross-env PORT=5000 nodemon server.js",
     "frontend": "cd ./frontend && npm start",
-    "setup-frontend": "cd frontend && npm install",
+    "setup-frontend": "cd frontend && npm install --legacy-peer-deps",
     "build-frontend": "npm run setup-frontend && cd frontend && npm run build",
     "heroku-postbuild": "NPM_CONFIG_PRODUCTION=false npm run build-frontend",
     "test": "jest",
