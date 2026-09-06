@@ -11,7 +11,7 @@
 ---
 
 ## 🌐 Live Demo
-🔗 **Coming Soon** — Deploying on Vercel + Render
+🔗 **[Live Demo](YOUR_RENDER_URL_HERE)** — Deployed on Render
 
 ---
 
@@ -202,8 +202,7 @@ Open **http://localhost:3000** in your browser 🚀
 
 | Service | Platform |
 |---------|----------|
-| Frontend | Vercel |
-| Backend | Render |
+| Full-Stack App | Render |
 | Database | MongoDB Atlas |
 | Images | Cloudinary |
 
