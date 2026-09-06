@@ -11,7 +11,7 @@
 ---
 
 ## 🌐 Live Demo
-🔗 **[Live Demo](YOUR_RENDER_URL_HERE)** — Deployed on Render
+🔗 **[Live Demo](https://moviedx-app.onrender.com)** — Deployed on Render
 
 ---
 
