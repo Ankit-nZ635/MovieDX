@@ -9,6 +9,8 @@ const CardFront = ({
   genre,
   trailerLink,
   movieLength,
+  isUpcoming,
+  releaseDate,
 }) => {
   const [showModal, setShowModal] = useState(false);
 
@@ -18,6 +20,16 @@ const CardFront = ({
   };
 
   const videoId = getYouTubeId(trailerLink);
+
+  const formatReleaseDate = (dateStr) => {
+    if (!dateStr) return "";
+    const date = new Date(dateStr);
+    return date.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
+  };
 
   const modal = showModal && (
     <div
@@ -53,10 +65,24 @@ const CardFront = ({
     <>
       <div className="front">
         <img src={coverImage} alt="coverImage" />
+
+        {isUpcoming && (
+          <div className="coming-soon-badge">
+            <span className="coming-soon-text">Coming Soon</span>
+            {releaseDate && (
+              <span className="release-date">
+                {formatReleaseDate(releaseDate)}
+              </span>
+            )}
+          </div>
+        )}
+
         <div className="card-footer">
           <h4>{title}</h4>
           <p>
-            {movieLength} / {genre.map((g) => g.name).join(", ")}
+            {isUpcoming
+              ? genre.map((g) => (typeof g === "object" ? g.name : g)).join(", ")
+              : `${movieLength} / ${genre.map((g) => g.name).join(", ")}`}
           </p>
           {videoId ? (
             <button
@@ -74,7 +100,11 @@ const CardFront = ({
             </button>
           )}
         </div>
-        <span className="like">{rate}</span>
+        {isUpcoming ? (
+          <span className="like coming-soon-like">🎬</span>
+        ) : (
+          <span className="like">{rate}</span>
+        )}
       </div>
 
       {/* Render modal at document.body level — above everything */}

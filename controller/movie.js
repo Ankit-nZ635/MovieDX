@@ -16,6 +16,16 @@ import { upload } from "../utils/cloudinary.js";
  */
 router.get("/", async (req, res) => {
   try {
+    // Auto-update: mark movies as no longer upcoming once their release date passes
+    await Movie.updateMany(
+      {
+        isUpcoming: true,
+        releaseDate: { $ne: "" },
+        releaseDate: { $lte: new Date().toISOString().split("T")[0] },
+      },
+      { $set: { isUpcoming: false } }
+    );
+
     const movies = await Movie.find().populate({
       path: "genre",
       select: "name",

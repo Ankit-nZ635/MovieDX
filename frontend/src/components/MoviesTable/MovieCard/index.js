@@ -15,9 +15,15 @@ export default function ({ movie }) {
     trailerLink,
     movieLength,
     whereToWatch,
+    isUpcoming,
+    releaseDate,
   } = movie;
 
   const coverImage = image;
+
+  // Auto-detect: only show "Coming Soon" if the movie is marked upcoming
+  // AND the release date is still in the future
+  const stillUpcoming = isUpcoming && releaseDate && new Date(releaseDate) > new Date();
 
   function flipCard(cardID) {
     const card = document.getElementById(`${cardID}`);
@@ -34,13 +40,17 @@ export default function ({ movie }) {
           movieLength={movieLength}
           genre={genre}
           title={title}
+          isUpcoming={stillUpcoming}
+          releaseDate={releaseDate}
         />
 
         <FlippingCardBack
-  id={_id}
-  description={description}
-  whereToWatch={whereToWatch}
-/>
+          id={_id}
+          description={description}
+          whereToWatch={whereToWatch}
+          isUpcoming={stillUpcoming}
+          releaseDate={releaseDate}
+        />
       </div>
     </div>
   );

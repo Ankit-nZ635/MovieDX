@@ -109,3 +109,32 @@ p {
 .movie-actions button {
   flex: 1;
 }
+
+/* Upcoming Movie Info */
+.upcoming-info {
+  margin-top: 8px;
+}
+
+.release-date-label {
+  font-size: 13px !important;
+  font-weight: 600;
+  color: #fff !important;
+  padding: 8px 12px;
+  background: rgba(229, 9, 20, 0.15);
+  border-left: 3px solid #e50914;
+  border-radius: 0 6px 6px 0;
+  margin-bottom: 6px;
+}
+
+.days-countdown {
+  font-size: 13px !important;
+  font-weight: 700;
+  color: #ffd700 !important;
+  padding: 6px 12px;
+  animation: countdownPulse 2s ease-in-out infinite;
+}
+
+@keyframes countdownPulse {
+  0%, 100% { opacity: 0.8; }
+  50% { opacity: 1; }
+}

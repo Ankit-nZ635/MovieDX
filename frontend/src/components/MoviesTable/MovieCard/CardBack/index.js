@@ -4,34 +4,6 @@ import "./style.css";
 
 const addToWatchlist = async (e, movieId) => {
   e.stopPropagation();
-  const addToWatchlist = async (e, movieId) => {
-  e.stopPropagation();
-  
- 
-
-  try {
-    const user = JSON.parse(localStorage.getItem("user"));
-
-    if (!user) {
-      alert("Please login first");
-      return;
-    }
-
-    await axios.post(
-      `/api/users/${user.user.id}/watchlist/${movieId}`
-    );
-
-    alert("✅ Added to Watchlist");
-  } catch (err) {
-    console.log(err);
-       
-
-
-    if (err.response?.status === 400) {
-      alert("⚠️ Already in Watchlist");
-    }
-  }
-};
 
   try {
     const user = JSON.parse(localStorage.getItem("user"));
@@ -92,75 +64,115 @@ const CardBack = ({
   liked,
   description,
   whereToWatch,
+  isUpcoming,
+  releaseDate,
 }) => {
   const user = JSON.parse(localStorage.getItem("user"));
+
+  const formatReleaseDate = (dateStr) => {
+    if (!dateStr) return "";
+    const date = new Date(dateStr);
+    return date.toLocaleDateString("en-US", {
+      weekday: "long",
+      month: "long",
+      day: "numeric",
+      year: "numeric",
+    });
+  };
+
+  const getDaysUntilRelease = (dateStr) => {
+    if (!dateStr) return null;
+    const release = new Date(dateStr);
+    const today = new Date();
+    const diffTime = release - today;
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays > 0 ? diffDays : null;
+  };
+
+  const daysLeft = isUpcoming ? getDaysUntilRelease(releaseDate) : null;
 
   return (
     <div className="back">
       <h5>Summary</h5>
       <p>{description}</p>
 
-      <div className="where-to-watch">
-        <h5>Where to Watch</h5>
-        <div className="platform-buttons">
-          {whereToWatch?.netflix && (
-            <a
-              href={whereToWatch.netflix}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <button className="platform-btn netflix">
-                🎬 Netflix
-              </button>
-            </a>
-          )}
-
-          {whereToWatch?.prime && (
-            <a
-              href={whereToWatch.prime}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <button className="platform-btn prime">
-                🎬 Prime
-              </button>
-            </a>
-          )}
-
-          {whereToWatch?.hotstar && (
-            <a
-              href={whereToWatch.hotstar}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <button className="platform-btn hotstar">
-                🎬 Hotstar
-              </button>
-            </a>
-          )}
-
-          {whereToWatch?.youtube && (
-            <a
-              href={whereToWatch.youtube}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <button className="platform-btn youtube">
-                🎬 YouTube
-              </button>
-            </a>
-          )}
-
-          {!whereToWatch?.netflix &&
-            !whereToWatch?.prime &&
-            !whereToWatch?.hotstar &&
-            !whereToWatch?.youtube && (
-              <p className="not-available">
-                Not available on streaming
+      {isUpcoming ? (
+        <div className="where-to-watch">
+          <h5>🎬 Coming Soon</h5>
+          <div className="upcoming-info">
+            <p className="release-date-label">
+              📅 {formatReleaseDate(releaseDate)}
+            </p>
+            {daysLeft && (
+              <p className="days-countdown">
+                ⏳ {daysLeft} day{daysLeft !== 1 ? "s" : ""} to go
               </p>
             )}
+          </div>
         </div>
-      </div>
+      ) : (
+        <div className="where-to-watch">
+          <h5>Where to Watch</h5>
+          <div className="platform-buttons">
+            {whereToWatch?.netflix && (
+              <a
+                href={whereToWatch.netflix}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <button className="platform-btn netflix">
+                  🎬 Netflix
+                </button>
+              </a>
+            )}
+
+            {whereToWatch?.prime && (
+              <a
+                href={whereToWatch.prime}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <button className="platform-btn prime">
+                  🎬 Prime
+                </button>
+              </a>
+            )}
+
+            {whereToWatch?.hotstar && (
+              <a
+                href={whereToWatch.hotstar}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <button className="platform-btn hotstar">
+                  🎬 Hotstar
+                </button>
+              </a>
+            )}
+
+            {whereToWatch?.youtube && (
+              <a
+                href={whereToWatch.youtube}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <button className="platform-btn youtube">
+                  🎬 YouTube
+                </button>
+              </a>
+            )}
+
+            {!whereToWatch?.netflix &&
+              !whereToWatch?.prime &&
+              !whereToWatch?.hotstar &&
+              !whereToWatch?.youtube && (
+                <p className="not-available">
+                  Not available on streaming
+                </p>
+              )}
+          </div>
+        </div>
+      )}
     
     <div className="movie-actions">
       <button

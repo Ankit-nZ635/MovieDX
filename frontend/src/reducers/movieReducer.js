@@ -20,6 +20,7 @@ export default function (state = initialState, action) {
       return {
         ...state,
         error: action.error,
+        loading: false,
       };
 
     default:

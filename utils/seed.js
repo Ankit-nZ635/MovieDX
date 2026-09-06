@@ -24,7 +24,9 @@ const movieSchema = mongoose.Schema({
   },
   isUpcoming: { type: Boolean, default: false },
   releaseDate: { type: String, default: "" },
-});
+}); 
+
+
 
 const Movie = mongoose.model("Movie", movieSchema);
 
@@ -312,16 +314,23 @@ const upcomingWithGenres = [];
 
 for (const movie of upcomingMovies) {
   const omdbData = await fetchMovie(movie.title);
-  const poster = omdbData.Response === "True" && omdbData.Poster !== "N/A"
+  const hasOmdb = omdbData.Response === "True";
+  const poster = hasOmdb && omdbData.Poster !== "N/A"
     ? omdbData.Poster
     : movie.image;
+  const rating = hasOmdb ? (parseFloat(omdbData.imdbRating) || 0) : movie.rate;
+  const length = hasOmdb ? (parseInt(omdbData.Runtime) || 0) : movie.movieLength;
+  const desc = hasOmdb && omdbData.Plot !== "N/A" ? omdbData.Plot : movie.description;
 
   upcomingWithGenres.push({
     ...movie,
     image: poster,
+    rate: rating,
+    movieLength: length,
+    description: desc,
     genre: movie.genre.map(g => genreMap[g]).filter(Boolean),
   });
-  console.log(`🎬 Upcoming: ${movie.title} | Poster: ${poster ? "✅" : "❌"}`);
+  console.log(`🎬 Upcoming: ${movie.title} | Poster: ${poster ? "✅" : "❌"} | Rating: ${rating}`);
 }
 
 await Movie.insertMany(upcomingWithGenres);
