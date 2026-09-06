@@ -1,7 +1,9 @@
 import mongoose from "mongoose";
 import https from "https";
+import * as dotenv from "dotenv";
+dotenv.config();
 
-const MONGO_URL = "mongodb+srv://ankit_ekka_db:dbAnkitekka@icine.36picpj.mongodb.net/iCinema?appName=iCine";
+const MONGO_URL = process.env.MONGO_URL || "mongodb+srv://ankit_ekka_db:dbAnkitekka@icine.36picpj.mongodb.net/iCinema?appName=iCine";
 const OMDB_API_KEY = "4aebbc48";
 const YOUTUBE_API_KEY = "AIzaSyDyM7Zh9m-lZU4_4HTx70upO2IRfBLPGk0"; 
 
